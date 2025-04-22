@@ -13,14 +13,4 @@ def generate_launch_description():
             executable='turtle_spawner',
             name='turtle_spawner'
         ),
-        Node(
-            package='catch_turtle_all',
-            executable='master_turtle',
-            name='master_turtle'
-        ),
-        Node(
-            package='catch_turtle_all',
-            executable='turtle_controller',
-            name='turtle_controller'
-        ),
     ])

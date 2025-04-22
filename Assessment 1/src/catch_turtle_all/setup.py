@@ -14,17 +14,14 @@ setup(
     ],
     install_requires=['setuptools'],
     zip_safe=True,
-    maintainer='your_name',
-    maintainer_email='your@email.com',
+    maintainer='ranqi',
+    maintainer_email='3037857646@qq.com',
     description='Turtlesim catch all turtles project',
     license='Apache License 2.0',
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
             'turtle_spawner = catch_turtle_all.turtle_spawner:main',
-            'master_turtle = catch_turtle_all.master_turtle:main',
-            'turtle_follower = catch_turtle_all.turtle_follower:main',
-            'turtle_controller = catch_turtle_all.turtle_controller:main',
         ],
     },
 )
