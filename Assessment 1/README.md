@@ -22,7 +22,7 @@ Assement 1/  # workstation
 *Task A: turtle_spawner.py*
 1. **Avoid Overlap**: Find the safe area by the spiral search algorithm.
 2. **Generate turtles**: Generate a turtle randomly every 3 seconds in the safe area.
-3. **Subscribe turtles**: Subscribe and save the locations of all turtles for integrating subsequent algorithms.
+3. **Subscribe turtles‘ location**: Subscribe and save the locations of all turtles for integrating subsequent algorithms.
 4. **Adaptive Timer**: Adaptively change the time interval for generating turtles according to the result of generating turtles.
 
 *Task B*

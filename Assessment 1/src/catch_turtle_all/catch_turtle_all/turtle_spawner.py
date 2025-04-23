@@ -3,6 +3,7 @@ from rclpy.node import Node
 from turtlesim.srv import Spawn
 from turtlesim.msg import Pose
 import random
+import numpy as np
 import math
 from collections import defaultdict
 
@@ -66,7 +67,7 @@ class TurtleSpawner(Node):
 
         # Try spiral search (random generation failed)
         center_x, center_y = 5.5, 5.5
-        for radius in [0.5, 1.0, 1.5, 2.0, 2.5]:
+        for radius in np.arange(0.5, 5.5, 0.5):
             for angle in range(0, 360, 30):
                 rad = math.radians(angle)
                 x = center_x + radius * math.cos(rad)
