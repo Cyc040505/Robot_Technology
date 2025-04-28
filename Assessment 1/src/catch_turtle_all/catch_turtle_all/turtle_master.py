@@ -1,13 +1,16 @@
-import rclpy
-from rclpy.node import Node
-from geometry_msgs.msg import Twist
-from turtlesim.msg import Pose
-from turtlesim.srv import Kill
-from pynput import keyboard
-import threading
+import re
 import math
 import time
-import re
+import rclpy
+import threading
+
+from pynput import keyboard
+from rclpy.node import Node
+from turtlesim.msg import Pose
+from turtlesim.srv import Kill
+from std_msgs.msg import String
+from geometry_msgs.msg import Twist
+
 
 class TurtleMaster(Node):
     def __init__(self):
@@ -47,6 +50,8 @@ class TurtleMaster(Node):
 
         # 初始订阅
         self.subscribe_to_turtle('turtle1')
+        
+        self.turtle_killed_publisher = self.create_publisher(String, '/turtle_killed', 10)
 
     def discover_new_turtles(self):
         """发现并订阅新生成的乌龟"""
@@ -126,6 +131,10 @@ class TurtleMaster(Node):
         try:
             response = future.result()
             self.get_logger().info(f'Successfully killed {turtle_name}')
+            # 发布乌龟被杀的消息
+            msg = String()
+            msg.data = turtle_name
+            self.turtle_killed_publisher.publish(msg)
             self.cleanup_turtle(turtle_name)
         except Exception as e:
             self.get_logger().error(f'Failed to kill {turtle_name}: {str(e)}')
