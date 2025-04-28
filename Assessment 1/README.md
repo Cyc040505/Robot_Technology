@@ -7,9 +7,8 @@ Assement 1/  # workstation
 │       ├── catch_turtle_all/  # code files
 │       │   ├── __init__.py
 │       │   ├── turtle_spawner.py  # task A: generate turtles (Avoid overlap)
-│       │   ├── 
-│       │   ├── 
-│       │   └── 
+│       │   ├── turtle_master.py  # task B: catch turtles
+│       │   └── turtle_follower.py  # task C: chain tracking
 │       ├── launch/
 │       │   └── catch_turtle.launch.py  # launch file
 │       ├── resource/
@@ -25,9 +24,9 @@ Assement 1/  # workstation
 3. **Subscribe turtles‘ location**: Subscribe and save the locations of all turtles for integrating subsequent algorithms.
 4. **Adaptive Timer**: Adaptively change the time interval for generating turtles according to the result of generating turtles.
 
-*Task B*
+*Task B: turtle_master.py*
 
-*Task C*
+*Task C: turtle_follower.py*
 
 ### Run Project
 Open the workstation in terminal:

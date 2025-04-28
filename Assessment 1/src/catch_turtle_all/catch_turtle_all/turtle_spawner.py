@@ -1,12 +1,11 @@
-import math
 import rclpy
+from rclpy.node import Node
+from turtlesim.srv import Spawn
+from turtlesim.msg import Pose
+from std_msgs.msg import String
 import random
 import numpy as np
-
-from rclpy.node import Node
-from turtlesim.msg import Pose
-from turtlesim.srv import Spawn
-from std_msgs.msg import String
+import math
 from collections import defaultdict
 
 
@@ -31,13 +30,6 @@ class TurtleSpawner(Node):
 
         # Adaptive timer
         self.create_timer(self.spawn_interval, self.adaptive_spawning)
-        
-        self.turtle_killed_subscription = self.create_subscription(
-            String,
-            '/turtle_killed',
-            self.turtle_killed_callback,
-            10
-        )
 
     """Subscribe to the new turtle's location"""
     def subscribe_to_turtle(self, turtle_name):
@@ -121,14 +113,6 @@ class TurtleSpawner(Node):
             self.spawn_interval = 3.0
         except Exception as e:
             self.get_logger().error(f'Generation failed: {str(e)}')
-            
-    def turtle_killed_callback(self, msg):
-        """处理乌龟被杀的消息"""
-        turtle_name = msg.data
-        if turtle_name in self.turtle_poses:
-            del self.turtle_poses[turtle_name]
-            self.get_logger().info(f'Removed killed turtle {turtle_name} from tracking')
-
 
 def main(args=None):
     rclpy.init(args=args)
