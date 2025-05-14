@@ -23,6 +23,7 @@ setup(
         'console_scripts': [
             'turtle_spawner = catch_turtle_all.turtle_spawner:main',
             'turtle_master = catch_turtle_all.turtle_master:main',
+            'turtle_follower = catch_turtle_all.turtle_follower:main'  
         ],
     },
 )
