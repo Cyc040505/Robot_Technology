@@ -31,6 +31,8 @@ class TurtleSpawner(Node):
         # Adaptive timer
         self.create_timer(self.spawn_interval, self.adaptive_spawning)
 
+        self.turtle_captured_publisher = self.create_publisher(String, '/turtle_captured', 10)
+
     """Subscribe to the new turtle's location"""
     def subscribe_to_turtle(self, turtle_name):
         if turtle_name not in self.active_subscriptions:
@@ -109,6 +111,10 @@ class TurtleSpawner(Node):
             response = future.result()
             self.subscribe_to_turtle(turtle_name)
             self.get_logger().info(f'Successfully generate: {response.name}')
+            # 发布新海龟生成消息
+            msg = String()
+            msg.data = turtle_name
+            self.turtle_captured_publisher.publish(msg)  # 需确保发布到正确话题
             # Reset the generation interval
             self.spawn_interval = 3.0
         except Exception as e:

@@ -20,7 +20,7 @@ class TurtleMaster(Node):
         self.angular_speed = 1.0
         self.current_twist = Twist()
         
-        # 主龟位置
+        # 订阅主龟位置
         self.main_turtle_pose = None
         self.create_subscription(Pose, '/turtle1/pose', self.main_turtle_pose_callback, 10)
         
@@ -38,8 +38,6 @@ class TurtleMaster(Node):
         # 存储所有海龟位置
         self.turtle_poses = {}  
         self.current_target = None
-        # 订阅主龟位置
-        self.create_subscription(Pose, '/turtle1/pose', self.main_turtle_pose_callback, 10)
         # 订阅其他海龟位置
         self.create_subscription(String, '/turtle_captured', self.turtle_spawn_callback, 10)
         # 路径规划定时器
@@ -68,10 +66,6 @@ class TurtleMaster(Node):
         """更新其他海龟位置"""
         self.turtle_poses[turtle_name] = msg
 
-    def turtle_pose_callback(self, msg, turtle_name):
-        """更新其他海龟位置"""
-        self.turtle_poses[turtle_name] = msg
-
     def update_target(self):
         """选择最近的未捕获海龟作为目标"""
         if not self.turtle_poses or not self.main_turtle_pose:
@@ -93,25 +87,27 @@ class TurtleMaster(Node):
                 item[1].y - self.main_turtle_pose.y
             )
         )
-        self.current_target = closest_turtle[1]
-        self.navigate_to_target()
+        target_pose = closest_turtle[1]
+        self.navigate_to_target(target_pose)
 
-    def navigate_to_target(self):
-        """控制主龟移动至目标"""
-        dx = self.current_target.x - self.main_turtle_pose.x
-        dy = self.current_target.y - self.main_turtle_pose.y
+    def navigate_to_target(self, target_pose):
+        """控制主龟移动至目标位置"""
+        dx = target_pose.x - self.main_turtle_pose.x
+        dy = target_pose.y - self.main_turtle_pose.y
         target_angle = math.atan2(dy, dx)
         angle_diff = target_angle - self.main_turtle_pose.theta
         
-        # 规范化角度差到[-π, π]
+        # 规范化角度差到 [-π, π]
         angle_diff = math.atan2(math.sin(angle_diff), math.cos(angle_diff))
         
         cmd = Twist()
-        if abs(angle_diff) > 0.1:  # 角度偏差较大时先转向
-            cmd.angular.z = 0.8 if angle_diff > 0 else -0.8
-        else:                      # 角度对齐后前进
-            cmd.linear.x = 1.5 * math.hypot(dx, dy)
-            cmd.linear.x = min(cmd.linear.x, 2.0)  # 限速
+        # 角度偏差较大时优先转向
+        if abs(angle_diff) > 0.1:
+            cmd.angular.z = 1.5 if angle_diff > 0 else -1.5
+        else:
+            # 方向对齐后前进，速度与距离成正比
+            distance = math.hypot(dx, dy)
+            cmd.linear.x = min(2.0, distance * 0.8)
         
         self.publisher_.publish(cmd)
 

@@ -64,7 +64,7 @@ class TurtleFollower(Node):
             dy = self.main_turtle_pose.y - pose.y
             distance_squared = dx*dx + dy*dy
             # 捕获阈值 (0.5的平方)
-            if distance_squared < 0.5:
+            if distance_squared < 0.4:
                 self.capture_turtle(turtle_name)
 
     def capture_turtle(self, turtle_name):
@@ -98,9 +98,9 @@ class TurtleFollower(Node):
                 leader_pose = self.other_turtle_poses.get(leader_name)
             
             # 统一参数设定
-            follow_distance = 1.0  # 固定跟随距离
+            follow_distance = 0.5  # 固定跟随距离
             max_speed = 3.0        # 最大线速度提升至3.0
-            angular_gain = 2.5     # 角速度增益提升
+            angular_gain = 1.5   # 角速度增益提升
             
             if not leader_pose or turtle_name not in self.other_turtle_poses:
                 continue
