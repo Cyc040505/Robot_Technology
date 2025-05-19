@@ -15,6 +15,8 @@ class TurtleFollower(Node):
         self.subscribed_turtles = set()
         self.turtle_captured_publisher = turtle_captured_publisher
 
+        self.captured_order = []  # 记录捕获顺序的队列
+
         # 动态发现新乌龟的定时器 (1秒)
         self.turtle_discovery_timer = self.create_timer(1.0, self.discover_new_turtles)
 
@@ -68,6 +70,7 @@ class TurtleFollower(Node):
     def capture_turtle(self, turtle_name):
         """捕获乌龟并初始化速度发布器"""
         if turtle_name not in self.captured_turtles:
+            self.captured_order.append(turtle_name)  # 记录捕获顺序
             # 为被抓捕的乌龟创建速度发布器
             cmd_vel_pub = self.create_publisher(Twist, f'/{turtle_name}/cmd_vel', 10)
             self.captured_turtles[turtle_name] = {
@@ -81,35 +84,52 @@ class TurtleFollower(Node):
             self.get_logger().info(f'Controlling {turtle_name} to follow turtle1')
 
     def control_captured_turtles(self):
-        """控制所有被抓捕的乌龟跟随主龟"""
-        if self.main_turtle_pose is None:
+        """控制所有被抓捕的乌龟跟随前一只乌龟"""
+        if not self.main_turtle_pose or not self.captured_order:
             return
 
-        for turtle_name, turtle_data in self.captured_turtles.items():
-            pose = self.other_turtle_poses.get(turtle_name)
-            if pose is None:
+        for i, turtle_name in enumerate(self.captured_order):
+            # 确定跟随目标：总是跟随队列中前一个元素
+            if i == 0:
+                # 第一个跟随主龟，但主龟不属于队列，需单独处理
+                leader_pose = self.main_turtle_pose
+            else:
+                leader_name = self.captured_order[i-1]
+                leader_pose = self.other_turtle_poses.get(leader_name)
+            
+            # 统一参数设定
+            follow_distance = 1.0  # 固定跟随距离
+            max_speed = 3.0        # 最大线速度提升至3.0
+            angular_gain = 2.5     # 角速度增益提升
+            
+            if not leader_pose or turtle_name not in self.other_turtle_poses:
                 continue
-                
-            # 计算与主龟的距离和角度差
-            dx = self.main_turtle_pose.x - pose.x
-            dy = self.main_turtle_pose.y - pose.y
-            distance = math.sqrt(dx**2 + dy**2)
+
+            current_pose = self.other_turtle_poses[turtle_name]
+            dx = leader_pose.x - current_pose.x
+            dy = leader_pose.y - current_pose.y
+            target_distance = math.hypot(dx, dy)
             target_angle = math.atan2(dy, dx)
-            angle_diff = target_angle - pose.theta
+            
+            # 角度差计算与规范化
+            angle_diff = target_angle - current_pose.theta
             angle_diff = math.atan2(math.sin(angle_diff), math.cos(angle_diff))
             
-            # 生成速度指令
+            # 动态速度控制
             cmd = Twist()
-            if distance > 1.0:
-                cmd.linear.x = min(2.0, distance * 0.5)
-                cmd.angular.z = angle_diff * 2.0
+            if target_distance > follow_distance:
+                # 线速度：距离越远速度越快，但不超过上限
+                cmd.linear.x = min(1.2 * target_distance, max_speed)  # 增益提升到1.2
+                # 角速度：偏差越大响应越快
+                cmd.angular.z = angular_gain * angle_diff
+                # 角速度限幅防止抖动
+                cmd.angular.z = max(min(cmd.angular.z, 4.0), -4.0)
             else:
                 cmd.linear.x = 0.0
                 cmd.angular.z = 0.0
             
-            # 发布速度指令
-            turtle_data['publisher'].publish(cmd)
-            turtle_data['last_cmd'] = cmd
+            # 发布指令
+            self.captured_turtles[turtle_name]['publisher'].publish(cmd)
 
     def update_main_turtle_pose(self, msg):
         """更新主龟位置"""
