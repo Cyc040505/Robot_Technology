@@ -85,7 +85,7 @@ class TurtleSpawner(Node):
         x, y = self.calculate_safe_position()
 
         if x is not None:
-            # generate new turtle
+            # Generate new turtle
             turtle_name = f'turtle_{len(self.turtle_poses) + 1}'
             req = Spawn.Request()
             req.x = x
@@ -111,10 +111,10 @@ class TurtleSpawner(Node):
             response = future.result()
             self.subscribe_to_turtle(turtle_name)
             self.get_logger().info(f'Successfully generate: {response.name}')
-            # 发布新海龟生成消息
+            # Publish the new turtle generation message
             msg = String()
             msg.data = turtle_name
-            self.turtle_captured_publisher.publish(msg)  # 需确保发布到正确话题
+            self.turtle_captured_publisher.publish(msg)  # Ensure it is published to the correct topic
             # Reset the generation interval
             self.spawn_interval = 3.0
         except Exception as e:

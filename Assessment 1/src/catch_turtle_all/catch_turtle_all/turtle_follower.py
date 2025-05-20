@@ -15,16 +15,16 @@ class TurtleFollower(Node):
         self.subscribed_turtles = set()
         self.turtle_captured_publisher = turtle_captured_publisher
 
-        self.captured_order = []  # 记录捕获顺序的队列
+        self.captured_order = []  # Queue to record the order of capture
 
-        # 动态发现新乌龟的定时器 (1秒)
+        # Timer to dynamically discover new turtles (1 second)
         self.turtle_discovery_timer = self.create_timer(1.0, self.discover_new_turtles)
 
-        # 被抓捕乌龟的控制定时器 (0.1秒)
+        # Control timer for captured turtles (0.1 second)
         self.follow_control_timer = self.create_timer(0.1, self.control_captured_turtles)
 
     def discover_new_turtles(self):
-        """发现并订阅新生成的乌龟"""
+        """Discover and subscribe to new turtles"""
         topic_names_and_types = self.get_topic_names_and_types()
         turtle_pose_pattern = re.compile(r'/(turtle_\d+|turtle1)/pose')
         
@@ -36,7 +36,7 @@ class TurtleFollower(Node):
                     self.subscribe_to_turtle(turtle_name)
 
     def subscribe_to_turtle(self, turtle_name):
-        """订阅乌龟的位置"""
+        """Subscribe to the position of a turtle"""
         if turtle_name not in self.subscribed_turtles:
             self.create_subscription(
                 Pose,
@@ -48,59 +48,59 @@ class TurtleFollower(Node):
             self.get_logger().info(f'Subscribed to {turtle_name} pose')
 
     def other_turtle_pose_callback(self, msg, turtle_name):
-        """更新其他乌龟位置"""
+        """Update the position of other turtles"""
         self.other_turtle_poses[turtle_name] = msg
 
     def check_collisions(self):
-        """检查碰撞并捕获乌龟"""
+        """Check for collisions and capture turtles"""
         if self.main_turtle_pose is None:
             return
             
         for turtle_name, pose in list(self.other_turtle_poses.items()):
             if pose is None or turtle_name == 'turtle1' or turtle_name in self.captured_turtles:
                 continue
-            # 计算距离平方
+            # Calculate squared distance
             dx = self.main_turtle_pose.x - pose.x
             dy = self.main_turtle_pose.y - pose.y
             distance_squared = dx*dx + dy*dy
-            # 捕获阈值 (0.5的平方)
+            # Capture threshold (square of 0.5)
             if distance_squared < 0.4:
                 self.capture_turtle(turtle_name)
 
     def capture_turtle(self, turtle_name):
-        """捕获乌龟并初始化速度发布器"""
+        """Capture a turtle and initialize its velocity publisher"""
         if turtle_name not in self.captured_turtles:
-            self.captured_order.append(turtle_name)  # 记录捕获顺序
-            # 为被抓捕的乌龟创建速度发布器
+            self.captured_order.append(turtle_name)  # Record the order of capture
+            # Create a velocity publisher for the captured turtle
             cmd_vel_pub = self.create_publisher(Twist, f'/{turtle_name}/cmd_vel', 10)
             self.captured_turtles[turtle_name] = {
                 'publisher': cmd_vel_pub,
                 'last_cmd': Twist()
             }
-            # 发布捕获消息
+            # Publish capture message
             msg = String()
             msg.data = turtle_name
             self.turtle_captured_publisher.publish(msg)
             self.get_logger().info(f'Controlling {turtle_name} to follow turtle1')
 
     def control_captured_turtles(self):
-        """控制所有被抓捕的乌龟跟随前一只乌龟"""
+        """Control all captured turtles to follow the previous one"""
         if not self.main_turtle_pose or not self.captured_order:
             return
 
         for i, turtle_name in enumerate(self.captured_order):
-            # 确定跟随目标：总是跟随队列中前一个元素
+            # Determine the target to follow: always the previous element in the queue
             if i == 0:
-                # 第一个跟随主龟，但主龟不属于队列，需单独处理
+                # The first one follows the main turtle, but the main turtle is not in the queue, so handle separately
                 leader_pose = self.main_turtle_pose
             else:
                 leader_name = self.captured_order[i-1]
                 leader_pose = self.other_turtle_poses.get(leader_name)
             
-            # 统一参数设定
-            follow_distance = 0.5  # 固定跟随距离
-            max_speed = 3.0        # 最大线速度提升至3.0
-            angular_gain = 1.5   # 角速度增益提升
+            # Unified parameter settings
+            follow_distance = 0.5  # Fixed follow distance
+            max_speed = 3.0        # Increased maximum linear speed to 3.0
+            angular_gain = 1.5   # Increased angular gain
             
             if not leader_pose or turtle_name not in self.other_turtle_poses:
                 continue
@@ -111,28 +111,28 @@ class TurtleFollower(Node):
             target_distance = math.hypot(dx, dy)
             target_angle = math.atan2(dy, dx)
             
-            # 角度差计算与规范化
+            # Angle difference calculation and normalization
             angle_diff = target_angle - current_pose.theta
             angle_diff = math.atan2(math.sin(angle_diff), math.cos(angle_diff))
             
-            # 动态速度控制
+            # Dynamic speed control
             cmd = Twist()
             if target_distance > follow_distance:
-                # 线速度：距离越远速度越快，但不超过上限
-                cmd.linear.x = min(1.2 * target_distance, max_speed)  # 增益提升到1.2
-                # 角速度：偏差越大响应越快
+                # Linear speed: the further the distance, the faster the speed, but not exceeding the upper limit
+                cmd.linear.x = min(1.2 * target_distance, max_speed)  # Increased gain to 1.2
+                # Angular speed: the larger the deviation, the faster the response
                 cmd.angular.z = angular_gain * angle_diff
-                # 角速度限幅防止抖动
+                # Limit angular speed to prevent jitter
                 cmd.angular.z = max(min(cmd.angular.z, 4.0), -4.0)
             else:
                 cmd.linear.x = 0.0
                 cmd.angular.z = 0.0
             
-            # 发布指令
+            # Publish command
             self.captured_turtles[turtle_name]['publisher'].publish(cmd)
 
     def update_main_turtle_pose(self, msg):
-        """更新主龟位置"""
+        """Update the position of the main turtle"""
         self.main_turtle_pose = msg
-        self.check_collisions()  # 确保调用碰撞检测
+        self.check_collisions()  # Ensure collision detection is called
         self.get_logger().info(f"Main turtle updated: ({msg.x:.2f}, {msg.y:.2f})")
