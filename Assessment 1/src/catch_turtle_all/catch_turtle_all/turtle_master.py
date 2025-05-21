@@ -38,8 +38,6 @@ class TurtleMaster(Node):
         self.current_target = None
         # Subscribe to the positions of other turtles
         self.create_subscription(String, '/turtle_captured', self.turtle_spawn_callback, 10)
-        # Path planning timer
-        self.create_timer(0.1, self.update_target)
 
     def main_turtle_pose_callback(self, msg):
         """Update the position of the main turtle"""
@@ -58,6 +56,7 @@ class TurtleMaster(Node):
     def turtle_pose_callback(self, msg, turtle_name):
         """Update the positions of other turtles"""
         self.turtle_poses[turtle_name] = msg
+        self.update_target() 
 
     def update_target(self):
         """Select the nearest uncaught turtle as the target"""
