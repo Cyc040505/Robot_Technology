@@ -98,9 +98,9 @@ class TurtleFollower(Node):
                 leader_pose = self.other_turtle_poses.get(leader_name)
             
             # Unified parameter settings
-            follow_distance = 0.5  # Fixed follow distance
-            max_speed = 3.0        # Increased maximum linear speed to 3.0
-            angular_gain = 1.5   # Increased angular gain
+            follow_distance = 1  # Fixed follow distance
+            max_speed = 2.0        
+            angular_gain = 1.5   
             
             if not leader_pose or turtle_name not in self.other_turtle_poses:
                 continue
