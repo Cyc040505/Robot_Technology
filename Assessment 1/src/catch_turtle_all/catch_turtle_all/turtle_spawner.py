@@ -3,6 +3,7 @@ from rclpy.node import Node
 from turtlesim.srv import Spawn
 from turtlesim.msg import Pose
 from std_msgs.msg import String
+from turtlesim.srv import SetPen
 import random
 import numpy as np
 import math
@@ -109,6 +110,12 @@ class TurtleSpawner(Node):
     def spawn_result(self, future, turtle_name):
         try:
             response = future.result()
+            # Remove the trace
+            pen_client = self.create_client(SetPen, f'{turtle_name}/set_pen')
+            pen_req = SetPen.Request()
+            pen_req.off = True
+            pen_client.call_async(pen_req)
+
             self.subscribe_to_turtle(turtle_name)
             self.get_logger().info(f'Successfully generate: {response.name}')
             # Publish the new turtle generation message

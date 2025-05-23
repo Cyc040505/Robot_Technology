@@ -7,7 +7,7 @@ Assement 1/  # workstation
 │       ├── catch_turtle_all/  # code files
 │       │   ├── __init__.py
 │       │   ├── turtle_spawner.py  # task A: generate turtles (Avoid overlap)
-│       │   ├── turtle_master.py  # task B: catch turtles
+│       │   ├── turtle_master.py  # task B: catch turtles (Autonomous)
 │       │   └── turtle_follower.py  # task C: chain tracking
 │       ├── launch/
 │       │   └── catch_turtle.launch.py  # launch file
@@ -25,8 +25,12 @@ Assement 1/  # workstation
 4. **Adaptive Timer**: Adaptively change the time interval for generating turtles according to the result of generating turtles.
 
 *Task B: turtle_master.py*
+1. **Target Selection**: Calculates the Euclidean distance between each uncaptured turtle and the master turtle to identify the closest target.
+2. **Navigation Control**: Use proportional speed control and angle alignment to achieve autonomous navigation.
 
 *Task C: turtle_follower.py*
+1. **Queue Management**: Create a following queue by recording turtle names in the order they are captured.
+2. **Following Distance**: Keep a constant distance of 0.5 units to avoid collisions.
 
 ### Run Project
 Open the workstation in terminal:

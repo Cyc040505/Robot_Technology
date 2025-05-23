@@ -1,6 +1,5 @@
 import math
 import rclpy
-from pynput import keyboard
 from rclpy.node import Node
 from turtlesim.msg import Pose
 from std_msgs.msg import String
@@ -22,11 +21,6 @@ class TurtleMaster(Node):
         self.main_turtle_pose = None
         self.create_subscription(Pose, '/turtle1/pose', self.main_turtle_pose_callback, 10)
         
-        # Start the keyboard listener thread
-        self.listener = keyboard.Listener(on_press=self.on_key_press, on_release=self.on_key_release)
-        self.listener.start()
-        self.get_logger().info("Manual control enabled (↑:Move forward ↓:Move backward ←:Turn Left →:Turn right)")
-
         # Initialize TurtleFollower
         self.turtle_captured_publisher = self.create_publisher(String, '/turtle_captured', 10)
         self.turtle_follower = TurtleFollower(
@@ -103,28 +97,6 @@ class TurtleMaster(Node):
         
         self.publisher_.publish(cmd)
 
-    def on_key_press(self, key):
-        """Handle key press events"""
-        try:
-            if key == keyboard.Key.up:
-                self.current_twist.linear.x = self.linear_speed
-            elif key == keyboard.Key.down:
-                self.current_twist.linear.x = -self.linear_speed
-            elif key == keyboard.Key.left:
-                self.current_twist.angular.z = self.angular_speed
-            elif key == keyboard.Key.right:
-                self.current_twist.angular.z = -self.angular_speed
-            self.publisher_.publish(self.current_twist)
-        except AttributeError:
-            pass
-
-    def on_key_release(self, key):
-        """Handle key release events"""
-        if key in [keyboard.Key.up, keyboard.Key.down]:
-            self.current_twist.linear.x = 0.0
-        elif key in [keyboard.Key.left, keyboard.Key.right]:
-            self.current_twist.angular.z = 0.0
-        self.publisher_.publish(self.current_twist)
 
 def main(args=None):
     rclpy.init(args=args)
